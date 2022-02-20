@@ -6,16 +6,20 @@ function setup() {
   createCanvas(1500, 900, P2D);
   noStroke();
 
-  businesses.push(new Business("Lemonade Stand", 4 / 1.07, 1.07, 0.6, 1));
-  businesses.push(new Business("Newspaper Deliver", 60, 1.15, 3, 60));
-  businesses.push(new Business("Car Wash", 720, 1.14, 6, 540));
-  businesses.push(new Business("Pizza Deliver", 8640, 1.13, 12, 4320));
-  businesses.push(new Business("Donut Shop", 103680, 1.12, 24, 51840));
-  businesses.push(new Business("Shrimp Boat", 1244160, 1.11, 96, 622080));
-  businesses.push(new Business("Hockey Team", 14929920, 1.10, 384, 7464960));
-  businesses.push(new Business("Movie Studio", 179159040, 1.09, 1536, 89579520));
-  businesses.push(new Business("Bank", 2149908480, 1.08, 6144, 1074954240));
-  businesses.push(new Business("Oil Company", 25798901760, 1.07, 36864, 29668737024));
+  businesses.push(new Business('Lemonade Stand', 4 / 1.07, 1.07, 0.6, 1));
+  businesses.push(new Business('Newspaper Deliver', 60, 1.15, 3, 60));
+  businesses.push(new Business('Car Wash', 720, 1.14, 6, 540));
+  businesses.push(new Business('Pizza Deliver', 8640, 1.13, 12, 4320));
+  businesses.push(new Business('Donut Shop', 103680, 1.12, 24, 51840));
+  businesses.push(new Business('Shrimp Boat', 1244160, 1.11, 96, 622080));
+  businesses.push(new Business('Hockey Team', 14929920, 1.1, 384, 7464960));
+  businesses.push(
+    new Business('Movie Studio', 179159040, 1.09, 1536, 89579520)
+  );
+  businesses.push(new Business('Bank', 2149908480, 1.08, 6144, 1074954240));
+  businesses.push(
+    new Business('Oil Company', 25798901760, 1.07, 36864, 29668737024)
+  );
   businesses[0].buy();
 }
 
@@ -30,7 +34,15 @@ function draw() {
 }
 
 function mousePressed() {
-  businesses.forEach((biz) => biz.clickCheck(mouseX, mouseY) ? biz.buy() : undefined); 
+  businesses.forEach((biz) =>
+    clickCheck(biz, mouseX, mouseY) ? biz.buy() : undefined
+  );
+}
+
+function clickCheck(obj, x, y) {
+  if (x < obj.x || x > obj.x + obj.w || y < obj.y || y > obj.y + obj.h)
+    return false;
+  return true;
 }
 
 class Business {
@@ -71,7 +83,9 @@ class Business {
     rect(x + 25, y + h - 45, w - 50, 20, 10);
 
     fill('#49db41');
-    rect(x + 25, y + h - 45, (w - 50) * (1 - this.timer / this.timerLen), 20, 10);
+    let mps = this.timerLen < 10;
+    let prop = mps ? 1 : 1 - this.timer / this.timerLen;
+    rect(x + 25, y + h - 45, (w - 50) * prop, 20, 10);
 
     textSize(20);
     textStyle(BOLD);
@@ -81,37 +95,48 @@ class Business {
     text(this.name, x + w / 2, y + 30);
 
     textAlign(RIGHT, TOP);
-    if (this.count != 0)
-      text(getNumberName(this.revenue * this.count), x + w - 30, y + h - 45);
     text(getNumberName(this.price), x + w - 30, y + h - 90);
 
     textAlign(LEFT, TOP);
-    if (this.count != 0)
-      text(round(this.timer / 1000 + 0.4) + 's', x + 30, y + h - 45);
     text(this.count, x + 30, y + h - 90);
+
+    let rev = this.revenue * this.count;
+    if (mps) {
+      textAlign(CENTER, TOP);
+      text(
+        `${getNumberName((rev / this.timerLen) * 1000)}/s`,
+        x + w / 2,
+        y + h - 45
+      );
+    } else if (this.count > 0) {
+      textAlign(RIGHT, TOP);
+      text(getNumberName(rev), x + w - 30, y + h - 45);
+      textAlign(LEFT, TOP);
+      text(round(this.timer / 1000 + 0.4) + 's', x + 30, y + h - 45);
+    }
   }
 
   run(delta) {
-    this.display();
-
-    if (this.count == 0) return;
-    this.timer -= delta;
-    if (this.timer < 0) {
-      this.timer += this.timerLen;
-      money += this.revenue * this.count;
+    if (this.count != 0) {
+      this.timer -= delta;
+      while (this.timer < 0) {
+        this.timer += this.timerLen;
+        money += this.revenue * this.count;
+      }
     }
+    this.display();
   }
 
   buy() {
     if (money < this.price) return;
     this.count++;
+    if ([25, 50, 100, 200, 300, 400].indexOf(this.count) != -1) {
+      this.timerLen /= 2;
+      this.time /= 2;
+    }
+
     money -= this.price;
     this.price *= this.coef;
-  }
-
-  clickCheck(x, y) {
-    if (x < this.x || x > this.x + this.w || y < this.y || y > this.y + this.h) return false;
-    return true;
   }
 }
 
