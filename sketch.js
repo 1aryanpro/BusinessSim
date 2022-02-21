@@ -1,6 +1,6 @@
-let businesses = [];
-
+const gutter = 20;
 let money = 4 / 1.07;
+let businesses = [];
 
 function setup() {
   createCanvas(1500, 900, P2D);
@@ -26,11 +26,21 @@ function setup() {
 function draw() {
   background(200);
 
-  businesses.forEach((biz) => biz.run(deltaTime));
+  let check = false;
+  businesses.forEach((biz) => {
+    biz.run(deltaTime);
+    if (check) return;
+    check = biz.count == 0;
+    biz.display()
+  });
+
+  stocks.display()
 
   textAlign(CENTER, CENTER);
   textSize(50);
-  text(getNumberName(money), width / 2, 40);
+  textFont('monospace');
+  textStyle(NORMAL);
+  text(getNumberName(money), width / 2, 50);
 }
 
 function mousePressed() {
@@ -45,12 +55,24 @@ function clickCheck(obj, x, y) {
   return true;
 }
 
+function checkBonuses() {
+  let count = businesses[0].count;
+  let check = true;
+  businesses.forEach((biz) => {
+    if (biz.count != count && check) check = false;
+  });
+  if ([25, 50, 100, 200, 300, 400].indexOf(count) != -1)
+    businesses.forEach((biz) => {
+      biz.timer /= 2;
+      biz.timerLen /= 2;
+    });
+}
+
 class Business {
   static i = 0;
   constructor(name, price, coef, time, revenue) {
     this.name = name;
 
-    let gutter = 20;
     let i = Business.i;
     this.w = (width - gutter * 2) * 0.25;
     this.h = (height - gutter * 10) / 5;
@@ -83,12 +105,13 @@ class Business {
     rect(x + 25, y + h - 45, w - 50, 20, 10);
 
     fill('#49db41');
-    let mps = this.timerLen < 10;
+    let mps = this.timerLen < 30;
     let prop = mps ? 1 : 1 - this.timer / this.timerLen;
     rect(x + 25, y + h - 45, (w - 50) * prop, 20, 10);
 
     textSize(20);
     textStyle(BOLD);
+    textFont('sans-serif');
     fill(0);
 
     textAlign(CENTER, CENTER);
@@ -124,7 +147,6 @@ class Business {
         money += this.revenue * this.count;
       }
     }
-    this.display();
   }
 
   buy() {
@@ -137,6 +159,7 @@ class Business {
 
     money -= this.price;
     this.price *= this.coef;
+    checkBonuses();
   }
 }
 
