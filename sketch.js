@@ -1,6 +1,8 @@
 const gutter = 20;
 let money = 4 / 1.07;
 let businesses = [];
+let stocks;
+let dev = false;
 let psave = 0;
 
 function setup() {
@@ -22,6 +24,8 @@ function setup() {
     new Business('Oil Company', 25798901760, 1.07, 36864, 29668737024)
   );
   businesses[0].buy();
+
+  stocks = new Stocks();
 
   if (getItem('gameSaved') == true) {
     let bizData = getItem('biz');
@@ -47,7 +51,7 @@ function draw() {
     biz.display();
   });
 
-  stocks.display()
+  stocks.display();
 
   textAlign(CENTER, CENTER);
   textSize(50);
@@ -197,6 +201,65 @@ class Business {
       timerLen: this.timerLen,
       timer: this.timer,
     };
+  }
+}
+
+class Stocks {
+  constructor() {
+    this.x = gutter + 2 * ((width - gutter * 2) * 0.25 + gutter);
+    this.y = gutter * 5;
+    this.w = width - this.x - gutter;
+    this.h = height - this.y - gutter;
+
+    this.numStocks = 15;
+    this.stockPrices = [];
+    let seed = random(1000);
+    for (let i = 0; i < this.numStocks; i++) {
+      this.stockPrices.push(noise(seed + i * (2 / this.numStocks)));
+    }
+  }
+
+  display() {
+    if (!dev) return;
+
+    fill(51);
+    rect(this.x, this.y, this.w, this.h);
+    fill(35);
+    rect(
+      this.x + gutter,
+      this.y + gutter,
+      this.w - gutter * 2,
+      this.h / 2 - gutter
+    );
+
+    stroke(255);
+    let px = this.x + gutter;
+    let py = (this.h / 2) * this.stockPrices[0] + this.y;
+    for (let i = 1; i < this.numStocks; i++) {
+      let price = this.stockPrices[i];
+      let x =
+        (i * (this.w - gutter * 2)) / (this.numStocks - 1) + this.x + gutter;
+      let y = (this.h / 2) * price + this.y;
+      line(px, py, x, y);
+      px = x;
+      py = y;
+    }
+    line(
+      this.x + gutter,
+      this.y + this.h / 4 - gutter / 2,
+      this.x + this.w - gutter,
+      this.y + this.h / 4 - gutter / 2
+    );
+    noStroke();
+  }
+}
+
+class Button {
+  constructor(x, y, text, color) {
+    this.x = x;
+    this.y = y;
+    this.text = text;
+    this.color = color;
   }
 }
 
