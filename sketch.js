@@ -1,6 +1,7 @@
 const gutter = 20;
 let money = 4 / 1.07;
 let businesses = [];
+let psave = 0;
 
 function setup() {
   createCanvas(1500, 900, P2D);
@@ -21,6 +22,18 @@ function setup() {
     new Business('Oil Company', 25798901760, 1.07, 36864, 29668737024)
   );
   businesses[0].buy();
+
+  if (getItem('gameSaved') == true) {
+    let bizData = getItem('biz');
+    bizData.forEach((data, i) => {
+      let biz = businesses[i];
+      biz.count = data.count;
+      biz.timerLen = data.timerLen;
+      biz.timer = data.timer;
+    });
+
+    money = getItem('money');
+  }
 }
 
 function draw() {
@@ -31,7 +44,7 @@ function draw() {
     biz.run(deltaTime);
     if (check) return;
     check = biz.count == 0;
-    biz.display()
+    biz.display();
   });
 
   stocks.display()
@@ -41,6 +54,13 @@ function draw() {
   textFont('monospace');
   textStyle(NORMAL);
   text(getNumberName(money), width / 2, 50);
+
+  let time = millis();
+  if (time > psave + 5000) {
+    saveGame();
+    psave = time - time % 5000;
+    console.log('saved');
+  }
 }
 
 function mousePressed() {
@@ -53,6 +73,15 @@ function clickCheck(obj, x, y) {
   if (x < obj.x || x > obj.x + obj.w || y < obj.y || y > obj.y + obj.h)
     return false;
   return true;
+}
+
+function saveGame() {
+  storeItem('money', money);
+  storeItem(
+    'biz',
+    businesses.map((biz) => biz.getData())
+  );
+  storeItem('gameSaved', true);
 }
 
 function checkBonuses() {
@@ -160,6 +189,14 @@ class Business {
     money -= this.price;
     this.price *= this.coef;
     checkBonuses();
+  }
+
+  getData() {
+    return {
+      count: this.count,
+      timerLen: this.timerLen,
+      timer: this.timer,
+    };
   }
 }
 
