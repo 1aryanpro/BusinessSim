@@ -63,7 +63,6 @@ function draw() {
   if (time > psave + 5000) {
     saveGame();
     psave = time - time % 5000;
-    console.log('saved');
   }
 }
 
@@ -94,6 +93,7 @@ function checkBonuses() {
   businesses.forEach((biz) => {
     if (biz.count != count && check) check = false;
   });
+  if (!check) return;
   if ([25, 50, 100, 200, 300, 400].indexOf(count) != -1)
     businesses.forEach((biz) => {
       biz.timer /= 2;
