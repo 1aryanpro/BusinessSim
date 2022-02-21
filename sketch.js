@@ -96,8 +96,8 @@ function checkBonuses() {
   if (!check) return;
   if ([25, 50, 100, 200, 300, 400].indexOf(count) != -1)
     businesses.forEach((biz) => {
-      biz.timer /= 2;
       biz.timerLen /= 2;
+      biz.timer /= 2;
     });
 }
 
@@ -187,7 +187,7 @@ class Business {
     this.count++;
     if ([25, 50, 100, 200, 300, 400].indexOf(this.count) != -1) {
       this.timerLen /= 2;
-      this.time /= 2;
+      this.timer /= 2;
     }
 
     money -= this.price;
@@ -310,7 +310,10 @@ function getNumberName(num) {
   if (num < 1000) return '$' + round(num);
   for (var i = 0; i < numberNames.length; i++) {
     num /= 1000;
-    if (num < 1000) return '$' + round(num * 10) / 10 + ' ' + numberNames[i];
+    if (num > 1000) continue;
+
+    let decs = num < 100 ? num < 10 ? 100 : 10 : 1;
+    return '$' + round(num * decs) / decs + ' ' + numberNames[i];
   }
   return 'Infinity';
 }
