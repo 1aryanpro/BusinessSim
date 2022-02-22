@@ -401,8 +401,6 @@ class Stocks {
       if (i < 3) btn.disabled = false;
       else btn.disabled = true;
     });
-
-    this.curStock = this.numStocks - 1;
   }
 
   pressed() {
