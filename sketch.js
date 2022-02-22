@@ -4,6 +4,7 @@ let businesses = [];
 let stocks;
 let dev = false;
 let psave = 0;
+let bonusLevel = -1;
 
 function setup() {
   createCanvas(1500, 900, P2D);
@@ -36,6 +37,7 @@ function setup() {
       biz.timer = data.timer;
     });
 
+    bonusLevel = getItem('bonusLevel');
     money = getItem('money');
   }
 }
@@ -88,21 +90,23 @@ function saveGame() {
     'biz',
     businesses.map((biz) => biz.getData())
   );
+  storeItem('bonusLevel', bonusLevel);
   storeItem('gameSaved', true);
 }
 
 function checkBonuses() {
   let count = businesses[0].count;
-  let check = true;
   businesses.forEach((biz) => {
-    if (biz.count != count && check) check = false;
+    if (biz.count < count) count = biz.count;
   });
-  if (!check) return;
-  if ([25, 50, 100, 200, 300, 400].indexOf(count) != -1)
+  let bonus = [25, 50, 100, 200, 300, 400].indexOf(count);
+  if (bonus > bonusLevel) {
     businesses.forEach((biz) => {
       biz.timerLen /= 2;
       biz.timer /= 2;
     });
+    bonusLevel++;
+  }
 }
 
 class Business {
@@ -383,16 +387,14 @@ function getTimeStr(ms) {
 
   function timeUnit(name, len) {
     if (s > len) {
-      let unit = floor(s/len);
+      let unit = floor(s / len);
       output += unit + name + ' ';
       s -= unit * len;
     }
   }
 
-  timeUnit('d', 86400);
   timeUnit('h', 3600);
   timeUnit('m', 60);
-
 
   output += s + 's';
   return output;
