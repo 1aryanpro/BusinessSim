@@ -172,7 +172,7 @@ class Business {
       textAlign(RIGHT, TOP);
       text(getNumberName(rev), x + w - 30, y + h - 45);
       textAlign(LEFT, TOP);
-      text(round(this.timer / 1000 + 0.4) + 's', x + 30, y + h - 45);
+      text(getTimeStr(this.timer), x + 30, y + h - 45);
     }
   }
 
@@ -377,7 +377,28 @@ class Button {
   }
 }
 
-var numberNames = [
+function getTimeStr(ms) {
+  let s = round(ms / 1000 + 0.4);
+  let output = '';
+
+  function timeUnit(name, len) {
+    if (s > len) {
+      let unit = floor(s/len);
+      output += unit + name + ' ';
+      s -= unit * len;
+    }
+  }
+
+  timeUnit('d', 86400);
+  timeUnit('h', 3600);
+  timeUnit('m', 60);
+
+
+  output += s + 's';
+  return output;
+}
+
+let numberNames = [
   'K',
   'Million',
   'Billion',
@@ -426,8 +447,10 @@ function getNumberName(num) {
     num /= 1000;
     if (num > 1000) continue;
 
-    let decs = num < 100 ? (num < 10 ? 100 : 10) : 1;
-    return '$' + round(num * decs) / decs + ' ' + numberNames[i];
+    let decs = num < 100 ? (num < 10 ? 2 : 1) : 0;
+    return (
+      '$' + num.toFixed(decs) + (decs == 0 ? '.' : '') + ' ' + numberNames[i]
+    );
   }
   return 'Infinity';
 }
