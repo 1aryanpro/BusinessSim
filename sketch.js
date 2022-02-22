@@ -8,9 +8,9 @@ let bonusLevel = -1;
 
 function setup() {
   if (windowWidth > (windowHeight * 15) / 9)
-    createCanvas((windowHeight - 40) / 9 * 15, windowHeight - 40, P2D);
-  else createCanvas(windowWidth - 40, (windowWidth - 40) / 15 * 9, P2D);
-  su = 20/1500 * width;
+    createCanvas(((windowHeight - 40) / 9) * 15, windowHeight - 40, P2D);
+  else createCanvas(windowWidth - 40, ((windowWidth - 40) / 15) * 9, P2D);
+  su = (20 / 1500) * width;
 
   noStroke();
 
@@ -48,6 +48,7 @@ function setup() {
 
 function draw() {
   background(200);
+  Stocks.unlocked = Stocks.unlocked ? true : businesses[4].count > 0;
 
   let check = false;
   businesses.forEach((biz) => {
@@ -57,7 +58,7 @@ function draw() {
     biz.display();
   });
 
-  if (dev) stocks.display();
+  stocks.display();
 
   textAlign(CENTER, CENTER);
   textSize(su * 2.5);
@@ -71,15 +72,13 @@ function draw() {
     saveGame();
     psave = time - (time % 5000);
   }
-
-  Stocks.unlocked = Stocks.unlocked ? true : businesses[4].count > 0;
 }
 
 function mousePressed() {
   businesses.forEach((biz) =>
     clickCheck(biz, mouseX, mouseY) ? biz.buy() : undefined
   );
-  if (dev) stocks.pressed();
+  stocks.pressed();
 }
 
 function clickCheck(obj, x, y) {
@@ -141,18 +140,18 @@ class Business {
     rect(x, y, w, h);
 
     fill('#49db41');
-    rect(x + su/2, y + su/2, w - su, h - su);
+    rect(x + su / 2, y + su / 2, w - su, h - su);
 
     fill('#1a8400');
     rect(x + su, y + h - su * 2.5, w - su * 2, su * 1.5, su * 0.75);
 
     fill('#1e9900');
-    rect(x + su * 1.25, y + h - su * 2.25, w - su*2.5, su, su/2);
+    rect(x + su * 1.25, y + h - su * 2.25, w - su * 2.5, su, su / 2);
 
     fill('#49db41');
     let mps = this.timerLen < 30;
     let prop = mps ? 1 : 1 - this.timer / this.timerLen;
-    rect(x + su * 1.25, y + h - su * 2.25, (w - su * 2.5) * prop, su, su/2);
+    rect(x + su * 1.25, y + h - su * 2.25, (w - su * 2.5) * prop, su, su / 2);
 
     textSize(su);
     textStyle(BOLD);
@@ -216,6 +215,10 @@ class Business {
   }
 }
 
+function getProp(x) {
+  return pow(100, 2 * x - 1).toFixed(2);
+}
+
 class Stocks {
   static unlocked = false;
 
@@ -269,45 +272,93 @@ class Stocks {
     }
 
     fill(35);
-    rect(
-      this.x + su,
-      this.y + su,
-      this.w - su * 2,
-      this.h / 2 - su
-    );
+    rect(this.x + su * 2, this.y + su, this.w - su * 3, this.h / 2 - su);
 
-    stroke(255);
-    let px = this.x + su;
-    let py = (this.h / 4 - su / 2) * this.stockPrices[0] + this.y;
-    for (let i = 1; i <= this.curStock; i++) {
+    const calcx = (i) =>
+      map(i, 0, this.numStocks - 1, this.x + su * 2, this.x + this.w - su);
+    const calcy = (p) => map(p, 0, 1, this.h / 2 + this.y, this.y + su);
+
+    const hline = (y) =>
+      line(calcx(0), calcy(y), calcx(this.numStocks - 1), calcy(y));
+    const vline = (x) => line(calcx(x), calcy(0), calcx(x), calcy(1));
+
+    // 1, 2, 3, 4, 5, 10, 20, 30, 40, 50, 100
+    let hs = [0, 0.08, 0.12, 0.152, 0.175, 0.25, 0.325, 0.37, 0.4, 0.425, 0.5];
+
+    hs.forEach((h, i) => {
+      let v = i % 5;
+      stroke(map(v, 0, 4, 125, 100));
+      strokeWeight(map(v, 0, 4, 2, 1));
+      hline(0.5 + h);
+      hline(0.5 - h);
+    });
+
+    noStroke();
+    textAlign(CENTER, CENTER);
+    textSize(su * 0.75);
+
+    fill(200);
+    text('100', this.x + su, calcy(1) + su * 0.325);
+    text('10', this.x + su, calcy(0.75));
+    text('1', this.x + su, calcy(0.5));
+    text('.1', this.x + su, calcy(0.25));
+    text('.01', this.x + su, calcy(0) - su * 0.325);
+
+    fill(150);
+    text('50', this.x + su, calcy(0.925));
+    text('5', this.x + su, calcy(0.675));
+    text('.5', this.x + su, calcy(0.325));
+    text('.05', this.x + su, calcy(0.075));
+
+    let px = calcx(0);
+    let py = calcy(this.stockPrices[0]);
+    for (let i = 0; i < this.numStocks; i++) {
+      stroke(200);
+      strokeWeight(1);
+      vline(i);
+      if (i > this.curStock) continue;
+
       let price = this.stockPrices[i];
-      let x =
-        (i * (this.w - su * 2)) / (this.numStocks - 1) + this.x + su;
-      let y = (this.h / 2 - su) * price + this.y;
+      let x = calcx(i);
+      let y = calcy(price);
+
+      if (py < y) stroke(255, 0, 0);
+      else stroke(0, 255, 0);
+      strokeWeight(2);
+
       line(px, py, x, y);
+      noFill();
+      circle(x, y, 10);
+
       px = x;
       py = y;
     }
-    line(
-      this.x + su,
-      this.y + this.h / 4 - su / 2,
-      this.x + this.w - su,
-      this.y + this.h / 4 - su / 2
-    );
+
     noStroke();
 
     fill(255);
-    textAlign(CENTER, TOP);
     textSize(su * 1.5);
+
     text(
       getNumberName(this.storedMoney),
-      this.x + this.w / 4,
-      this.h / 2 + this.y + su
+      this.x + this.w * .2,
+      this.h / 2 + this.y + su * 2
     );
+
+    let prop = getProp(this.stockPrices[this.curStock]);
     text(
-      'x' + this.stockPrices[this.curStock].toFixed(2),
-      this.x + this.w * 0.75,
-      this.h / 2 + this.y + su
+      getNumberName(this.storedMoney * prop),
+      this.x + this.w * .8,
+      this.h / 2 + this.y + su * 2
+    );
+
+    
+    if (prop >= 1) fill(0, 230, 0);
+    else fill(230, 0, 0)
+    text(
+      'x' + prop,
+      this.x + this.w * .5,
+      this.h / 2 + this.y + su * 2
     );
 
     this.buttons.forEach((btn) => btn.display());
@@ -323,6 +374,8 @@ class Stocks {
   }
 
   buy(i) {
+    this.reStock();
+    this.curStock = 0;
     let prop;
 
     if (i == 0) prop = 0.1;
@@ -349,8 +402,7 @@ class Stocks {
       else btn.disabled = true;
     });
 
-    this.reStock();
-    this.curStock = 0;
+    this.curStock = this.numStocks - 1;
   }
 
   pressed() {
