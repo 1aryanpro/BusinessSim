@@ -57,12 +57,13 @@ function draw() {
   textSize(50);
   textFont('monospace');
   textStyle(NORMAL);
+  fill(0);
   text(getNumberName(money), width / 2, 50);
 
   let time = millis();
   if (time > psave + 5000) {
     saveGame();
-    psave = time - time % 5000;
+    psave = time - (time % 5000);
   }
 }
 
@@ -70,6 +71,7 @@ function mousePressed() {
   businesses.forEach((biz) =>
     clickCheck(biz, mouseX, mouseY) ? biz.buy() : undefined
   );
+  stocks.pressed();
 }
 
 function clickCheck(obj, x, y) {
@@ -212,11 +214,33 @@ class Stocks {
     this.h = height - this.y - gutter;
 
     this.numStocks = 15;
-    this.stockPrices = [];
+    this.stockPrices = [0.5];
     let seed = random(1000);
-    for (let i = 0; i < this.numStocks; i++) {
+    for (let i = 1; i < this.numStocks; i++) {
       this.stockPrices.push(noise(seed + i * (2 / this.numStocks)));
     }
+
+    this.storedMoney = 0;
+    this.curStock = 0;
+
+    this.buttons = [];
+    this.buttons.push(this.newBtn(0, 0, 3, 'Buy 10%', '#FF0000'));
+    this.buttons.push(this.newBtn(1, 0, 3, 'Buy 50%', '#FF0000'));
+    this.buttons.push(this.newBtn(2, 0, 3, 'Buy 100%', '#FF0000'));
+    this.buttons.push(this.newBtn(0, 1, 2, 'Wait', '#FF0000'));
+    this.buttons.push(this.newBtn(1, 1, 2, 'Sell', '#FF0000'));
+
+    this.buttons[3].disabled = true;
+    this.buttons[4].disabled = true;
+  }
+
+  newBtn(x, y, s, text, color) {
+    let btnw = (this.w - gutter * (s + 1)) / s;
+    let btnh = (this.h / 2 - gutter * 6) / 2;
+    let btnx = this.x + gutter + (btnw + gutter) * x;
+    let btny = this.y + this.h / 2 + gutter * 4 + (btnh + gutter) * y;
+
+    return new Button(btnx, btny, btnw, btnh, text, color);
   }
 
   display() {
@@ -234,12 +258,12 @@ class Stocks {
 
     stroke(255);
     let px = this.x + gutter;
-    let py = (this.h / 2) * this.stockPrices[0] + this.y;
-    for (let i = 1; i < this.numStocks; i++) {
+    let py = this.h / 4 - gutter/2 + this.y;
+    for (let i = 1; i < this.curStock; i++) {
       let price = this.stockPrices[i];
       let x =
         (i * (this.w - gutter * 2)) / (this.numStocks - 1) + this.x + gutter;
-      let y = (this.h / 2) * price + this.y;
+      let y = (this.h / 2 - gutter) * price + this.y;
       line(px, py, x, y);
       px = x;
       py = y;
@@ -251,15 +275,74 @@ class Stocks {
       this.y + this.h / 4 - gutter / 2
     );
     noStroke();
+
+    fill(255);
+    textAlign(CENTER, TOP)
+    textSize(gutter*1.5)
+    text(getNumberName(this.storedMoney), this.x + this.w/4, this.h/2 + this.y + gutter )
+    text("x"+this.stockPrices[this.curStock].toFixed(2), this.x + this.w*0.75, this.h/2 + this.y + gutter )
+
+    this.buttons.forEach((btn) => btn.display());
+  }
+
+  buy(i) {
+    let prop;
+
+    if (i == 0) prop = 0.1;
+    if (i == 1) prop = 0.5;
+    if (i == 2) prop = 1;
+
+    this.storedMoney = money * prop;
+    money -= this.storedMoney;
+
+    this.curStock = 0;
+
+    this.buttons.forEach(btn => btn.disabled = !btn.disabled)
+  }
+
+  wait() {
+    this.curStock++;
+    if (this.curStock == this.numStocks -1) this.buttons[3].disabled = true;
+  }
+
+  sell() {
+    money += this.storedMoney * (this.stockPrices[this.curStock]);
+    this.storedMoney = 0;
+
+    this.buttons.forEach((btn,i) => {
+      if (i < 3) btn.disabled = false;
+      else btn.disabled =true;
+    });
+  }
+
+  pressed() {
+    this.buttons.forEach((btn, i) => {
+      if (btn.disabled || !clickCheck(btn, mouseX, mouseY)) return;
+      if (i < 3) this.buy(i);
+      if (i == 3) this.wait();
+      if (i == 4) this.sell();
+    });
   }
 }
 
 class Button {
-  constructor(x, y, text, color) {
+  constructor(x, y, w, h, text, color) {
     this.x = x;
     this.y = y;
+    this.w = w;
+    this.h = h;
     this.text = text;
     this.color = color;
+    this.disabled = false;
+  }
+
+  display() {
+    this.disabled ? fill(100) : fill(this.color);
+    rect(this.x, this.y, this.w, this.h);
+    this.disabled ? fill(50) : fill(0);
+    textAlign(CENTER, CENTER);
+    textSize(25);
+    text(this.text, this.x + this.w / 2, this.y + this.h / 2);
   }
 }
 
@@ -312,7 +395,7 @@ function getNumberName(num) {
     num /= 1000;
     if (num > 1000) continue;
 
-    let decs = num < 100 ? num < 10 ? 100 : 10 : 1;
+    let decs = num < 100 ? (num < 10 ? 100 : 10) : 1;
     return '$' + round(num * decs) / decs + ' ' + numberNames[i];
   }
   return 'Infinity';
