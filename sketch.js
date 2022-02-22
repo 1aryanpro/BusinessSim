@@ -394,7 +394,7 @@ class Stocks {
   }
 
   sell() {
-    money += this.storedMoney * this.stockPrices[this.curStock];
+    money += this.storedMoney * getProp(this.stockPrices[this.curStock]);
     this.storedMoney = 0;
 
     this.buttons.forEach((btn, i) => {
