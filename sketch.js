@@ -1,4 +1,4 @@
-const gutter = 20;
+let su; // size unit
 let money = 4 / 1.07;
 let businesses = [];
 let stocks;
@@ -7,7 +7,11 @@ let psave = 0;
 let bonusLevel = -1;
 
 function setup() {
-  createCanvas(1500, 900, P2D);
+  if (windowWidth > (windowHeight * 15) / 9)
+    createCanvas((windowHeight / 9) * 15, windowHeight, P2D);
+  else createCanvas(windowWidth, (windowWidth / 15) * 9, P2D);
+  su = 20/1500 * width;
+
   noStroke();
 
   businesses.push(new Business('Lemonade Stand', 4 / 1.07, 1.07, 0.6, 1));
@@ -56,11 +60,11 @@ function draw() {
   if (dev) stocks.display();
 
   textAlign(CENTER, CENTER);
-  textSize(50);
+  textSize(su * 2.5);
   textFont('monospace');
   textStyle(NORMAL);
   fill(0);
-  text(getNumberName(money), width / 2, 50);
+  text(getNumberName(money), width / 2, su * 2.5);
 
   let time = millis();
   if (time > psave + 5000) {
@@ -115,10 +119,10 @@ class Business {
     this.name = name;
 
     let i = Business.i;
-    this.w = (width - gutter * 2) * 0.25;
-    this.h = (height - gutter * 10) / 5;
-    this.x = gutter + floor(i / 5) * (this.w + gutter);
-    this.y = gutter * 5 + (i % 5) * (this.h + gutter);
+    this.w = (width - su * 2) * 0.25;
+    this.h = (height - su * 10) / 5;
+    this.x = su + floor(i / 5) * (this.w + su);
+    this.y = su * 5 + (i % 5) * (this.h + su);
     Business.i++;
 
     this.price = price;
@@ -137,32 +141,32 @@ class Business {
     rect(x, y, w, h);
 
     fill('#49db41');
-    rect(x + 10, y + 10, w - 20, h - 20);
+    rect(x + su/2, y + su/2, w - su, h - su);
 
     fill('#1a8400');
-    rect(x + 20, y + h - 50, w - 40, 30, 15);
+    rect(x + su, y + h - su * 2.5, w - su * 2, su * 1.5, su * 0.75);
 
     fill('#1e9900');
-    rect(x + 25, y + h - 45, w - 50, 20, 10);
+    rect(x + su * 1.25, y + h - su * 2.25, w - su*2.5, su, su/2);
 
     fill('#49db41');
     let mps = this.timerLen < 30;
     let prop = mps ? 1 : 1 - this.timer / this.timerLen;
-    rect(x + 25, y + h - 45, (w - 50) * prop, 20, 10);
+    rect(x + su * 1.25, y + h - su * 2.25, (w - su * 2.5) * prop, su, su/2);
 
-    textSize(20);
+    textSize(su);
     textStyle(BOLD);
     textFont('sans-serif');
     fill(0);
 
     textAlign(CENTER, CENTER);
-    text(this.name, x + w / 2, y + 30);
+    text(this.name, x + w / 2, y + su * 1.5);
 
     textAlign(RIGHT, TOP);
-    text(getNumberName(this.price), x + w - 30, y + h - 90);
+    text(getNumberName(this.price), x + w - su * 1.5, y + h - su * 4.5);
 
     textAlign(LEFT, TOP);
-    text(this.count, x + 30, y + h - 90);
+    text(this.count, x + su * 1.5, y + h - su * 4.5);
 
     let rev = this.revenue * this.count;
     if (mps) {
@@ -170,13 +174,13 @@ class Business {
       text(
         `${getNumberName((rev / this.timerLen) * 1000)}/s`,
         x + w / 2,
-        y + h - 45
+        y + h - su * 2.25
       );
     } else if (this.count > 0) {
       textAlign(RIGHT, TOP);
-      text(getNumberName(rev), x + w - 30, y + h - 45);
+      text(getNumberName(rev), x + w - su * 1.5, y + h - su * 2.25);
       textAlign(LEFT, TOP);
-      text(getTimeStr(this.timer), x + 30, y + h - 45);
+      text(getTimeStr(this.timer), x + su * 1.5, y + h - su * 2.25);
     }
   }
 
@@ -216,10 +220,10 @@ class Stocks {
   static unlocked = false;
 
   constructor() {
-    this.x = gutter + 2 * ((width - gutter * 2) * 0.25 + gutter);
-    this.y = gutter * 5;
-    this.w = width - this.x - gutter;
-    this.h = height - this.y - gutter;
+    this.x = su + 2 * ((width - su * 2) * 0.25 + su);
+    this.y = su * 5;
+    this.w = width - this.x - su;
+    this.h = height - this.y - su;
 
     this.reStock();
 
@@ -240,10 +244,10 @@ class Stocks {
   }
 
   newBtn(x, y, s, text, color) {
-    let btnw = (this.w - gutter * (s + 1)) / s;
-    let btnh = (this.h / 2 - gutter * 6) / 2;
-    let btnx = this.x + gutter + (btnw + gutter) * x;
-    let btny = this.y + this.h / 2 + gutter * 4 + (btnh + gutter) * y;
+    let btnw = (this.w - su * (s + 1)) / s;
+    let btnh = (this.h / 2 - su * 6) / 2;
+    let btnx = this.x + su + (btnw + su) * x;
+    let btny = this.y + this.h / 2 + su * 4 + (btnh + su) * y;
 
     return new Button(btnx, btny, btnw, btnh, text, color);
   }
@@ -254,7 +258,7 @@ class Stocks {
 
     if (!Stocks.unlocked) {
       fill(255);
-      textSize(50);
+      textSize(su * 2.5);
       textAlign(CENTER, CENTER);
       text(
         'Stocks has not been\nunlocked yet.',
@@ -266,44 +270,44 @@ class Stocks {
 
     fill(35);
     rect(
-      this.x + gutter,
-      this.y + gutter,
-      this.w - gutter * 2,
-      this.h / 2 - gutter
+      this.x + su,
+      this.y + su,
+      this.w - su * 2,
+      this.h / 2 - su
     );
 
     stroke(255);
-    let px = this.x + gutter;
-    let py = (this.h / 4 - gutter / 2) * this.stockPrices[0] + this.y;
+    let px = this.x + su;
+    let py = (this.h / 4 - su / 2) * this.stockPrices[0] + this.y;
     for (let i = 1; i <= this.curStock; i++) {
       let price = this.stockPrices[i];
       let x =
-        (i * (this.w - gutter * 2)) / (this.numStocks - 1) + this.x + gutter;
-      let y = (this.h / 2 - gutter) * price + this.y;
+        (i * (this.w - su * 2)) / (this.numStocks - 1) + this.x + su;
+      let y = (this.h / 2 - su) * price + this.y;
       line(px, py, x, y);
       px = x;
       py = y;
     }
     line(
-      this.x + gutter,
-      this.y + this.h / 4 - gutter / 2,
-      this.x + this.w - gutter,
-      this.y + this.h / 4 - gutter / 2
+      this.x + su,
+      this.y + this.h / 4 - su / 2,
+      this.x + this.w - su,
+      this.y + this.h / 4 - su / 2
     );
     noStroke();
 
     fill(255);
     textAlign(CENTER, TOP);
-    textSize(gutter * 1.5);
+    textSize(su * 1.5);
     text(
       getNumberName(this.storedMoney),
       this.x + this.w / 4,
-      this.h / 2 + this.y + gutter
+      this.h / 2 + this.y + su
     );
     text(
       'x' + this.stockPrices[this.curStock].toFixed(2),
       this.x + this.w * 0.75,
-      this.h / 2 + this.y + gutter
+      this.h / 2 + this.y + su
     );
 
     this.buttons.forEach((btn) => btn.display());
@@ -376,7 +380,7 @@ class Button {
     rect(this.x, this.y, this.w, this.h);
     this.disabled ? fill(50) : fill(0);
     textAlign(CENTER, CENTER);
-    textSize(25);
+    textSize(su * 1.25);
     text(this.text, this.x + this.w / 2, this.y + this.h / 2);
   }
 }
