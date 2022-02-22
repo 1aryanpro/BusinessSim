@@ -51,7 +51,7 @@ function draw() {
     biz.display();
   });
 
-  stocks.display();
+  if (dev) stocks.display();
 
   textAlign(CENTER, CENTER);
   textSize(50);
@@ -65,13 +65,15 @@ function draw() {
     saveGame();
     psave = time - (time % 5000);
   }
+
+  Stocks.unlocked = Stocks.unlocked ? true : businesses[4].count > 0;
 }
 
 function mousePressed() {
   businesses.forEach((biz) =>
     clickCheck(biz, mouseX, mouseY) ? biz.buy() : undefined
   );
-  stocks.pressed();
+  if (dev) stocks.pressed();
 }
 
 function clickCheck(obj, x, y) {
@@ -207,28 +209,27 @@ class Business {
 }
 
 class Stocks {
+  static unlocked = false;
+
   constructor() {
     this.x = gutter + 2 * ((width - gutter * 2) * 0.25 + gutter);
     this.y = gutter * 5;
     this.w = width - this.x - gutter;
     this.h = height - this.y - gutter;
 
-    this.numStocks = 15;
-    this.stockPrices = [0.5];
-    let seed = random(1000);
-    for (let i = 1; i < this.numStocks; i++) {
-      this.stockPrices.push(noise(seed + i * (2 / this.numStocks)));
-    }
+    this.reStock();
 
     this.storedMoney = 0;
     this.curStock = 0;
 
     this.buttons = [];
-    this.buttons.push(this.newBtn(0, 0, 3, 'Buy 10%', '#FF0000'));
-    this.buttons.push(this.newBtn(1, 0, 3, 'Buy 50%', '#FF0000'));
-    this.buttons.push(this.newBtn(2, 0, 3, 'Buy 100%', '#FF0000'));
-    this.buttons.push(this.newBtn(0, 1, 2, 'Wait', '#FF0000'));
-    this.buttons.push(this.newBtn(1, 1, 2, 'Sell', '#FF0000'));
+    let c1 = '#5073fc';
+    let c2 = '#6d50fc';
+    this.buttons.push(this.newBtn(0, 0, 3, 'Buy 10%', c1));
+    this.buttons.push(this.newBtn(1, 0, 3, 'Buy 50%', c1));
+    this.buttons.push(this.newBtn(2, 0, 3, 'Buy 100%', c1));
+    this.buttons.push(this.newBtn(0, 1, 2, 'Wait', c2));
+    this.buttons.push(this.newBtn(1, 1, 2, 'Sell', c2));
 
     this.buttons[3].disabled = true;
     this.buttons[4].disabled = true;
@@ -244,10 +245,21 @@ class Stocks {
   }
 
   display() {
-    if (!dev) return;
-
     fill(51);
     rect(this.x, this.y, this.w, this.h);
+
+    if (!Stocks.unlocked) {
+      fill(255);
+      textSize(50);
+      textAlign(CENTER, CENTER);
+      text(
+        'Stocks has not been\nunlocked yet.',
+        this.x + this.w / 2,
+        this.y + this.h / 2
+      );
+      return;
+    }
+
     fill(35);
     rect(
       this.x + gutter,
@@ -258,8 +270,8 @@ class Stocks {
 
     stroke(255);
     let px = this.x + gutter;
-    let py = this.h / 4 - gutter/2 + this.y;
-    for (let i = 1; i < this.curStock; i++) {
+    let py = (this.h / 4 - gutter / 2) * this.stockPrices[0] + this.y;
+    for (let i = 1; i <= this.curStock; i++) {
       let price = this.stockPrices[i];
       let x =
         (i * (this.w - gutter * 2)) / (this.numStocks - 1) + this.x + gutter;
@@ -277,12 +289,29 @@ class Stocks {
     noStroke();
 
     fill(255);
-    textAlign(CENTER, TOP)
-    textSize(gutter*1.5)
-    text(getNumberName(this.storedMoney), this.x + this.w/4, this.h/2 + this.y + gutter )
-    text("x"+this.stockPrices[this.curStock].toFixed(2), this.x + this.w*0.75, this.h/2 + this.y + gutter )
+    textAlign(CENTER, TOP);
+    textSize(gutter * 1.5);
+    text(
+      getNumberName(this.storedMoney),
+      this.x + this.w / 4,
+      this.h / 2 + this.y + gutter
+    );
+    text(
+      'x' + this.stockPrices[this.curStock].toFixed(2),
+      this.x + this.w * 0.75,
+      this.h / 2 + this.y + gutter
+    );
 
     this.buttons.forEach((btn) => btn.display());
+  }
+
+  reStock() {
+    this.numStocks = 15;
+    this.stockPrices = [];
+    let seed = random(1000);
+    for (let i = 0; i < this.numStocks; i++) {
+      this.stockPrices.push(noise(seed + i * (2 / this.numStocks)));
+    }
   }
 
   buy(i) {
@@ -295,27 +324,29 @@ class Stocks {
     this.storedMoney = money * prop;
     money -= this.storedMoney;
 
-    this.curStock = 0;
-
-    this.buttons.forEach(btn => btn.disabled = !btn.disabled)
+    this.buttons.forEach((btn) => (btn.disabled = !btn.disabled));
   }
 
   wait() {
     this.curStock++;
-    if (this.curStock == this.numStocks -1) this.buttons[3].disabled = true;
+    if (this.curStock == this.numStocks - 1) this.buttons[3].disabled = true;
   }
 
   sell() {
-    money += this.storedMoney * (this.stockPrices[this.curStock]);
+    money += this.storedMoney * this.stockPrices[this.curStock];
     this.storedMoney = 0;
 
-    this.buttons.forEach((btn,i) => {
+    this.buttons.forEach((btn, i) => {
       if (i < 3) btn.disabled = false;
-      else btn.disabled =true;
+      else btn.disabled = true;
     });
+
+    this.reStock();
+    this.curStock = 0;
   }
 
   pressed() {
+    if (!Stocks.unlocked) return;
     this.buttons.forEach((btn, i) => {
       if (btn.disabled || !clickCheck(btn, mouseX, mouseY)) return;
       if (i < 3) this.buy(i);
