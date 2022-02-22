@@ -8,8 +8,8 @@ let bonusLevel = -1;
 
 function setup() {
   if (windowWidth > (windowHeight * 15) / 9)
-    createCanvas((windowHeight / 9) * 15, windowHeight, P2D);
-  else createCanvas(windowWidth, (windowWidth / 15) * 9, P2D);
+    createCanvas((windowHeight - 40) / 9 * 15, windowHeight - 40, P2D);
+  else createCanvas(windowWidth - 40, (windowWidth - 40) / 15 * 9, P2D);
   su = 20/1500 * width;
 
   noStroke();
