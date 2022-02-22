@@ -322,9 +322,9 @@ class Stocks {
       let x = calcx(i);
       let y = calcy(price);
 
-      if (py < y) stroke(255, 0, 0);
-      else stroke(0, 255, 0);
-      strokeWeight(2);
+      if (py < y) stroke(230, 0, 0);
+      else stroke(0, 230, 0);
+      strokeWeight(2.5);
 
       line(px, py, x, y);
       noFill();
@@ -369,7 +369,7 @@ class Stocks {
     this.stockPrices = [];
     let seed = random(1000);
     for (let i = 0; i < this.numStocks; i++) {
-      this.stockPrices.push(noise(seed + i * (2 / this.numStocks)));
+      this.stockPrices.push(noise(seed + i * (2 / this.numStocks)) - 0.05);
     }
   }
 
