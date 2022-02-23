@@ -1,8 +1,10 @@
 let su; // size unit
+let dev = false;
+let version = 1;
+
 let money = 4 / 1.07;
 let businesses = [];
 let stocks;
-let dev = false;
 let psave = 0;
 let bonusLevel = -1;
 
@@ -28,27 +30,27 @@ function setup() {
   businesses.push(
     new Business('Oil Company', 25798901760, 1.07, 36864, 29668737024)
   );
-  businesses[0].buy();
 
   stocks = new Stocks();
 
-  if (getItem('gameSaved') == true) {
+  let saveVersion = getItem('version');
+  if (getItem('gameSaved') == true && saveVersion >= 1) {
     let bizData = getItem('biz');
     bizData.forEach((data, i) => {
       let biz = businesses[i];
-      biz.count = data.count;
+      biz.buy(data.count, true);
       biz.timerLen = data.timerLen;
       biz.timer = data.timer;
     });
 
     bonusLevel = getItem('bonusLevel');
     money = getItem('money');
-  }
+  } else businesses[0].buy();
 }
 
 function draw() {
   background(200);
-  Stocks.unlocked = Stocks.unlocked ? true : businesses[4].count > 0;
+  Stocks.unlocked = Stocks.unlocked ? true : businesses[7].count > 0;
 
   let check = false;
   businesses.forEach((biz) => {
@@ -94,6 +96,7 @@ function saveGame() {
     businesses.map((biz) => biz.getData())
   );
   storeItem('bonusLevel', bonusLevel);
+  storeItem('version', version);
   storeItem('gameSaved', true);
 }
 
@@ -193,17 +196,19 @@ class Business {
     }
   }
 
-  buy() {
-    if (money < this.price) return;
-    this.count++;
-    if ([25, 50, 100, 200, 300, 400].indexOf(this.count) != -1) {
-      this.timerLen /= 2;
-      this.timer /= 2;
-    }
+  buy(amt = 1, override = false) {
+    for (let i = 0; i < amt; i++) {
+      if (!override && money < this.price) return;
+      this.count++;
+      if ([25, 50, 100, 200, 300, 400].indexOf(this.count) != -1) {
+        this.timerLen /= 2;
+        this.timer /= 2;
+      }
 
-    money -= this.price;
-    this.price *= this.coef;
-    checkBonuses();
+      if (!override) money -= this.price;
+      this.price *= this.coef;
+      checkBonuses();
+    }
   }
 
   getData() {
@@ -341,25 +346,20 @@ class Stocks {
 
     text(
       getNumberName(this.storedMoney),
-      this.x + this.w * .2,
+      this.x + this.w * 0.2,
       this.h / 2 + this.y + su * 2
     );
 
     let prop = getProp(this.stockPrices[this.curStock]);
     text(
       getNumberName(this.storedMoney * prop),
-      this.x + this.w * .8,
+      this.x + this.w * 0.8,
       this.h / 2 + this.y + su * 2
     );
 
-    
     if (prop >= 1) fill(0, 230, 0);
-    else fill(230, 0, 0)
-    text(
-      'x' + prop,
-      this.x + this.w * .5,
-      this.h / 2 + this.y + su * 2
-    );
+    else fill(230, 0, 0);
+    text('x' + prop, this.x + this.w * 0.5, this.h / 2 + this.y + su * 2);
 
     this.buttons.forEach((btn) => btn.display());
   }
