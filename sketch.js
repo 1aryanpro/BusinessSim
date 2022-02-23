@@ -233,6 +233,7 @@ class Stocks {
     this.w = width - this.x - su;
     this.h = height - this.y - su;
 
+    this.numStocks = 15;
     this.reStock();
 
     this.storedMoney = 0;
@@ -365,11 +366,12 @@ class Stocks {
   }
 
   reStock() {
-    this.numStocks = 15;
-    this.stockPrices = [];
     let seed = random(1000);
+    let genNoise = (i) => noise(seed + i * (1.5 / this.numStocks)) - noise(seed) + 0.5;
+
+    this.stockPrices = [];
     for (let i = 0; i < this.numStocks; i++) {
-      this.stockPrices.push(noise(seed + i * (2 / this.numStocks)) - 0.05);
+      this.stockPrices.push(genNoise(i));
     }
   }
 
