@@ -1,6 +1,6 @@
 let su; // size unit
 let dev = false;
-let version = 1;
+let version = 2;
 
 let money = 4 / 1.07;
 let businesses = [];
@@ -39,11 +39,10 @@ function setup() {
     bizData.forEach((data, i) => {
       let biz = businesses[i];
       biz.buy(data.count, true);
-      biz.timerLen = data.timerLen;
-      biz.timer = data.timer;
+      biz.timer = data.timer * biz.timerLen;
+      if (biz.timer > biz.timerLen) biz.timer = biz.timerLen;
     });
 
-    bonusLevel = getItem('bonusLevel');
     money = getItem('money');
   } else businesses[0].buy();
 }
@@ -95,7 +94,6 @@ function saveGame() {
     'biz',
     businesses.map((biz) => biz.getData())
   );
-  storeItem('bonusLevel', bonusLevel);
   storeItem('version', version);
   storeItem('gameSaved', true);
 }
@@ -214,8 +212,7 @@ class Business {
   getData() {
     return {
       count: this.count,
-      timerLen: this.timerLen,
-      timer: this.timer,
+      timer: this.timer / this.timerLen,
     };
   }
 }
