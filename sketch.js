@@ -403,6 +403,7 @@ class Stocks {
   }
 
   pressed() {
+    saveGame();
     if (!Stocks.unlocked) return;
     this.buttons.forEach((btn, i) => {
       if (btn.disabled || !clickCheck(btn, mouseX, mouseY)) return;
